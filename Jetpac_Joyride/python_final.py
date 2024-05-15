@@ -6,8 +6,13 @@ pygame.init()  # Initiera pygame-modulen
 fps = 60  # Sätt antal frames per sekund för spelet
 timer = pygame.time.Clock()  # Skapa en klocka för att hantera tiden i spelet
 
+# Denna klassen är den enda klassen som anropas i min huvudspes-loop. I klassen
+# kallas då alltså de andra två klasserna. Klassen skapar allt relaterat till en 
+# spelgenomgång inklusive alla objekt och variablar. Game ska skapa själva spelet,
+# sluta spelet och simulera allt i spelgenomgången förutom hindrerna.
+
 class Game:  # Skapa en klass för spelet
-    def __init__(self) -> None:  # Konstruktor för Game-klassen
+    def __init__(self) -> None:  # Konstruktor för Game-klassen (self i alla klasser eftersom de inte ska vara lokala till metoderna)
         # Initialiserar min Game klass variablar
         self.played = False  # Flagga för om spelet har startats
         self.score = 0  # Spelarens poäng i spelet
@@ -39,7 +44,7 @@ class Game:  # Skapa en klass för spelet
         self.booster = False  # Flagga för jetpack-boost
         self.startTime = time.time()  # Starttid för spelet
 
-    # Funktion för att visa titelskärmen
+    # Metod för att visa titelskärmen
     def showTitleScreen(self):
         if not self.started:
             self.drawBackGround()  # Rita bakgrund
@@ -51,14 +56,14 @@ class Game:  # Skapa en klass för spelet
                 self.titleScore = myGame.titleFont.render("Score: " + str(int(self.score)), False, (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
                 self.screen.blit(self.titleScore, (400, 400))  # Rita poängen på skärmen
 
-    # Funktion för att starta spelet
+    # Metod för att starta spelet
     def start(self):
         self.game_speed = 6  # Återställ spelets hastighet
         self.pause = False  # Sluta pausa spelet
         self.started = True  # Sätt igång spelet
         self.startTime = time.time()  # Sätt starttiden för spelet
 
-    # Funktion för att avsluta spelet
+    # Metod för att avsluta spelet
     def end(self):
         self.started = False  # Stoppa spelet
         self.game_speed = 0  # Stoppa spelets hastighet
@@ -67,7 +72,7 @@ class Game:  # Skapa en klass för spelet
         self.myObstacles[0].obstacle_rect.x = -1000  # Återställ hinderobjektets position
         self.myRocket.obstacle_rect.x = -1000  # Återställ rakethinderobjektets position
 
-    # Funktion för att kontrollera händelser i spelet
+    # Metod för att kontrollera händelser i spelet
     def checkEvent(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -82,7 +87,7 @@ class Game:  # Skapa en klass för spelet
                 if event.key == pygame.K_SPACE:
                     self.booster = False  # Avaktivera jetpack-boost
 
-    # Funktion för att rita bakgrunden
+    # Metod för att rita bakgrunden
     def drawBackGround(self):
         self.screen.fill('black')  # Fyll skärmen med svart färg
         # Rita bakgrunden med alfastöd
@@ -103,13 +108,13 @@ class Game:  # Skapa en klass för spelet
             if self.lines[i] < -3:
                 self.lines[i] = self.WIDTH  # Återställ linjernas position när de når skärmens kant
 
-    # Funktion för att rita spelaren
+    # Metod för att rita spelaren
     def drawPlayer(self):
         self.colliding = self.checkAreaCollision()  # Kontrollera kollision med spelarens område
         # Rita spelaren på skärmen
         self.myPlayer.Draw(self.screen, self.pause, self.gravity, self.colliding, self.booster)
     
-    # Funktion för att skapa laserhindren
+    # Metod för att skapa laserhindren
     def drawLaser(self):
         if len(self.myObstacles) == 0:
             self.myObstacles.append(Obstacle("hinder.png", self.game_speed, self.HEIGHT))  # Skapa ett nytt hinderobjekt
@@ -119,7 +124,7 @@ class Game:  # Skapa en klass för spelet
             if self.myObstacles[i].checkCollision(self.myPlayer.getPlayer()):
                 self.end()  # Avsluta spelet om spelaren kolliderar med hindret
 
-    # Funktion för att skapa rakethindret
+    # Metod för att skapa rakethindret
     def drawRocket(self):
         self.myRocket.spawnObstacle(self.HEIGHT, self.WIDTH)  # Placera ut rakethindret i spelområdet
         self.myRocket.createUttropstecken(self.WIDTH)  # Skapa utropstecken för rakethindret
@@ -128,7 +133,7 @@ class Game:  # Skapa en klass för spelet
         if self.myRocket.checkCollision(self.myPlayer.getPlayer()):
             self.end()  # Avsluta spelet om spelaren kolliderar med rakethindret
         
-    # Funktion för att kontrollera kollision med spelarens område
+    # Metod för att kontrollera kollision med spelarens område
     def checkAreaCollision(self):
         coll = [False, False]
         if self.myPlayer.getPlayer().colliderect(self.bottom):
@@ -137,14 +142,19 @@ class Game:  # Skapa en klass för spelet
             coll[1] = True
         return coll
     
-    # Funktion för att kontrollera om spelet ska fortsätta köras
+    # Metod för att kontrollera om spelet ska fortsätta köras
     def getRunStatus(self):
         return self.run
 
-    # Funktion för att visa titelskärmen
+    # Metod för att visa titelskärmen
     def titleScreen(self):
         self.game_speed = 0  # Stoppa spelets hastighet
         
+
+# Denna klassen ritar allt som har att göra med spelaren. Alltså själva spelaren och 
+# jetpacken. Allt som allt är detta den minsta klassen och är mest där för 
+# struktuella själ. 
+
 class Player:  # Klass för spelaren
     def __init__(self, height) -> None:  # Konstruktor för Player-klassen
         self.init_y = height - 130  # Initial y-position för spelaren
@@ -153,11 +163,11 @@ class Player:  # Klass för spelaren
         self.y_velocity = 0  # Y-hastighet för spelaren
         self.player = pygame.rect.Rect((120, self.player_y + 10), (25, 60))  # Spelarens rektangel
 
-    # Funktion för att hämta spelarens rektangel
+    # Metod för att hämta spelarens rektangel
     def getPlayer(self):
         return self.player
     
-    # Funktion för att rita spelaren på skärmen
+    # Metod för att rita spelaren på skärmen
     def Draw(self, screen, pause, gravity, colliding, booster):
         if not pause:
             if booster:
@@ -213,6 +223,10 @@ class Player:  # Klass för spelaren
         pygame.draw.circle(screen, 'orange', (135, self.player_y + 15), 10)
         pygame.draw.circle(screen, 'black', (138, self.player_y + 12), 3)
 
+# Denna klassen ska skapa de olika hindrerna samt tilldela värden på de olika
+# variablerna relaterat till hindrerna. Den tar filnamnet, speed och height som
+# argument eftersom det är värderna på det specifika hindret som klassen skapar.
+
 class Obstacle:  # Klass för hinder
     def __init__(self, filename, speed, height) -> None:  # Konstruktor för Obstacle-klassen
         self.obstacle = pygame.image.load(filename)  # Läs in hinderbilden från filen
@@ -226,7 +240,7 @@ class Obstacle:  # Klass för hinder
         self.speed = speed  # Hastighet för hindret
         self.myUttropstecken = None  # Utropstecken för hindret
 
-    # Funktion för att placera ut hindret i spelområdet
+    # Metod för att placera ut hindret i spelområdet
     def spawnObstacle(self, height, width) -> None:
         if self.obstacle_rect.x < (random.randint(-1000, -500)):
             # Slumpmässig y-position för hindret inom spelområdet
@@ -234,37 +248,39 @@ class Obstacle:  # Klass för hinder
             self.obstacle_rect.x = (width + 500)  # Återställ hindrets x-position utanför högerkanten
             self.obstacle_rect.y = y_ccord  # Uppdatera hindrets y-position
 
-    # Funktion för att skapa utropstecken för hindret
+    # Metod för att skapa utropstecken för hindret
     def createUttropstecken(self, width):
         self.myUttropstecken = pygame.image.load("uttropstecken.png")  # Läs in utropstecken från filen
         self.myUttropstecken_x = width - 100  # X-position för utropstecknet
         self.myUttropstecken_y = self.obstacle_rect.y  # Y-position för utropstecknet
 
-    # Funktion för att ställa in hindrets hastighet
+    # Metod för att ställa in hindrets hastighet
     def setSpeed(self, speed):
         self.speed = speed  # Uppdatera hindrets hastighet
 
-    # Funktion för att hämta hindrets rektangel
+    # Metod för att hämta hindrets rektangel
     def getRect(self):
         return self.obstacle_rect  # Returnera hindrets rektangel
 
-    # Funktion för att rita hindret på skärmen
+    # Metod för att rita hindret på skärmen
     def draw(self, screen):
         self.obstacle_rect.x -= self.speed  # Uppdatera hindrets x-position baserat på spelets hastighet
         if self.myUttropstecken:
             screen.blit(self.myUttropstecken, (self.myUttropstecken_x, self.myUttropstecken_y))  # Rita utropstecknet
         screen.blit(self.obstacle, (self.obstacle_rect.x, self.obstacle_rect.y))  # Rita hindret på skärmen
 
-    # Funktion för att kontrollera kollision med spelaren
+    # Metod för att kontrollera kollision med spelaren
     def checkCollision(self, player):
         if player.colliderect(self.obstacle_rect):
             return True  # Returnera True om kollision med spelaren
         return False  # Annars returnera False
 
-myGame = Game()  # Skapa ett Game-objekt för spelet (Klassen Games funktioner kan användas i min huvudspel loop)
+myGame = Game()  # Skapa ett Game-objekt för spelet (Klassen Games metoder kan användas i min huvudspel loop)
 run = True  # Flagga för att köra spelet
 
-while myGame.getRunStatus():  # Huvudspel loopen
+
+
+while myGame.getRunStatus():  # Huvudspel loopen som simulerar spelet
     timer.tick(fps)  # Uppdatera klockan med aktuell framehastighet
 
     if myGame.started:  # Om spelet har startat
@@ -277,7 +293,7 @@ while myGame.getRunStatus():  # Huvudspel loopen
             for i in range(len(myGame.myObstacles)):
                 myGame.myObstacles[i].setSpeed(myGame.game_speed)
 
-        # Rita bakgrund, spelare, hinder och rakethinder på skärmen
+        # Rita bakgrund, spelare, hinder och rakethinder på skärmen. Alla i klassen (Game)
         myGame.drawBackGround()
         myGame.drawPlayer()
         myGame.drawLaser()
